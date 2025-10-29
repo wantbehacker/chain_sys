@@ -311,12 +311,6 @@ def main():
                 "color": "green"
             }
 
-    if cfg["save_model"]:
-        for task in ["normal", "replace"]:
-            save_path = f"./save_model/{cfg['model_name']}_{task}.pth"
-            torch.save(models[task].state_dict(), save_path)
-            print(f"[{task}] 模型已保存到：{save_path}")
-
 
 if __name__ == "__main__":
     from threading import Thread

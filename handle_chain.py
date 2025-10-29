@@ -209,15 +209,15 @@ if __name__ == "__main__":
     model_hax = calc_hash(model_path)
     model_name = os.path.basename(model_path)
     model_info = {"acc": 90, "hash": model_hax, "skill": "image_classification"}
-    print("上传模型信息:", client.set_key(model_name, model_info))
-    print("上传模型", client.upload_file(model_path))
-    print("获取所有模型信息:", client.get_all())
+    # print("上传模型信息:", client.set_key(model_name, model_info))
+    # print("上传模型", client.upload_file(model_path))
+    # print("获取所有模型信息:", client.get_all())
     # print("列出文件:", client.list_files())
     # print("获取模型信息:", client.get_key(model_name))
     # print("下载模型", client.download_file(model_name, r"./chain_model/download_model.pth"))
     # print("下载模型bytes", client.get_temp_model(model_name))
     # print("删除模型信息:", client.delete_key(model_name))
-    # print("清空模型信息和模型文件:", client.clear_all_models(False))
+    print("清空模型信息和模型文件:", client.clear_all_models(False))
 
 # =====================================================================
 # # 文件操作示例
