@@ -7,6 +7,7 @@
 """
 import base64
 import copy
+import hashlib
 import io
 import json
 import time
@@ -21,6 +22,7 @@ from flask import Flask, jsonify
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
+from handle_chain import ChainClient
 from models import build_model  # 从 models 模块导入
 
 # =================== 全局缓存 ===================
@@ -153,6 +155,7 @@ def run_one_round(task_name, epoch, model, train_loader, test_loader, optimizer,
     model_name = cfg["model_name"]
 
     test_dataset = test_loader.dataset
+    model_bytes, CHAIN_MODEL_VALID, model_hash, model_acc, model_skill = get_model_bytes()
     local_model_path = f"./save_model/{model_name}.pth"
 
     in_poison_phase = poison_round <= epoch < poison_round + poison_duration
@@ -210,6 +213,29 @@ def run_one_round(task_name, epoch, model, train_loader, test_loader, optimizer,
 
     mid_data["infer_results"][task_name][f"round_{epoch}"] = img_results
     return model, optimizer
+
+
+def get_model_bytes(model_name: str = "emnist-cnn.pth"):
+    client = ChainClient("http://172.31.137.160:9000")
+    chain_model_name = model_name
+
+    model_bytes = client.get_temp_model(chain_model_name)
+    if isinstance(model_bytes, dict) and "error" in model_bytes:
+        print("模型下载失败:", model_bytes)
+        return None, False, None, None, None
+    print("模型从链上读取成功")
+    model_info = client.get_key(chain_model_name)['value']
+    model_hash = model_info['hash']
+    model_acc = model_info.get('acc', None)
+    model_skill = model_info.get('skill', None)
+
+    down_hash = hashlib.sha256(model_bytes).hexdigest()
+    model_valid = down_hash == model_hash
+    if model_valid:
+        print(f"hash校验通过，模型一致, 哈希值：{model_hash}")
+    else:
+        print(f"hash校验不通过，内存模型哈希为{down_hash}, 链上哈希为{model_hash}")
+    return model_bytes, model_valid, model_hash, model_acc, model_skill
 
 
 # =================== 主函数 ===================

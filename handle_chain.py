@@ -163,7 +163,7 @@ class ChainClient:
 # ===================== 测试 =====================
 if __name__ == "__main__":
     client = ChainClient("http://172.31.137.160:9000")
-    model_path = r"handwrite.pth"
+    model_path = r"./save_model/emnist-cnn.pth"
     model_hax = calc_hash(model_path)
     model_name = os.path.basename(model_path)
     model_info = {"acc": 90, "hash": model_hax, "skill": "image_classification"}
