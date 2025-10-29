@@ -1,0 +1,13 @@
+{
+  "data_root": "./data_set",
+  "image_size": 28,
+  "batch_size": 64,
+  "infer_image_nums": 2,
+  "total_epochs": 10,
+  "learning_rate": 0.01,
+  "momentum": 0.9,
+  "model_name": "mnist-cnn",
+  "save_model": 0,
+  "poison_round": 2,
+  "poison_duration": 2
+}
