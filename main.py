@@ -133,12 +133,26 @@ def init_task(task_name, cfg, num_classes, device):
     model_name = cfg["model_name"]
     learning_rate = cfg["learning_rate"]
     momentum = cfg["momentum"]
-
+    chain_model_name = f"{model_name}.pth"
+    # 构建模型
     model = build_model(model_name, num_classes).to(device)
-    local_model_path = f"./save_model/{model_name}.pth"
-    if Path(local_model_path).exists():
-        model.load_state_dict(torch.load(local_model_path, map_location=device))
-        print(f"[{task_name}] 已加载初始模型: {local_model_path}")
+
+    # ==== 优先从链上加载模型 ====
+    print(f"[{task_name}] 尝试从链上加载初始模型...")
+    model_bytes, valid, model_hash, model_acc, model_skill = get_model_bytes(chain_model_name)
+
+    if model_bytes:
+        try:
+            buffer = io.BytesIO(model_bytes)
+            state_dict = torch.load(buffer, map_location=device)
+            model.load_state_dict(state_dict)
+            print(f"[{task_name}] 已从链上加载模型 ✅ (hash={model_hash}, acc={model_acc}%)")
+        except Exception:
+            print(f"构建链上模型{chain_model_name}失败，bytes已拉取成功")
+            input()
+    else:
+        print(f"拉取模型{chain_model_name} bytes失败，区块链可能已脱机")
+        input()
 
     optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
     criterion = nn.CrossEntropyLoss()
@@ -153,13 +167,14 @@ def run_one_round(task_name, epoch, model, train_loader, test_loader, optimizer,
     total_epochs = cfg["total_epochs"]
     infer_image_nums = cfg["infer_image_nums"]
     model_name = cfg["model_name"]
+    chain_model_name = f"{model_name}.pth"
 
     test_dataset = test_loader.dataset
-    model_bytes, CHAIN_MODEL_VALID, model_hash, model_acc, model_skill = get_model_bytes()
-    local_model_path = f"./save_model/{model_name}.pth"
 
+    # ====== 每轮检测当前阶段 ======
     in_poison_phase = poison_round <= epoch < poison_round + poison_duration
 
+    # ====== 投毒阶段训练 ======
     if in_poison_phase:
         loss = train_one_epoch(model, train_loader, optimizer, criterion, device, reverse_grad=True)
     else:
@@ -167,14 +182,29 @@ def run_one_round(task_name, epoch, model, train_loader, test_loader, optimizer,
 
     acc = evaluate(model, test_loader, device)
 
-    # 投毒阶段结束替换
+    # ====== 投毒阶段结束后：替换为链上原始模型 ======
     if epoch == poison_round + poison_duration and task_name == "replace":
-        model.load_state_dict(torch.load(local_model_path, map_location=device))
-        optimizer = optim.SGD(model.parameters(), lr=cfg["learning_rate"], momentum=cfg["momentum"])
-        print(f"[{task_name}] 投毒结束，已替换回初始模型。")
-        acc = evaluate(model, test_loader, device)
+        print(f"[{task_name}] 投毒阶段结束，尝试从链上恢复原始模型...")
+        model_bytes, valid, model_hash, model_acc, model_skill = get_model_bytes(f"{model_name}.pth")
 
-    # 更新全局结果
+        if model_bytes:
+            try:
+                buffer = io.BytesIO(model_bytes)
+                state_dict = torch.load(buffer, map_location=device)
+                model.load_state_dict(state_dict)
+                print(f"[{task_name}] 成功从链上恢复模型 ✅ (hash={model_hash}, acc={model_acc}%)")
+            except Exception:
+                print(f"构建链上模型{chain_model_name}失败，bytes已拉取成功")
+                input()
+        else:
+            print(f"拉取模型{chain_model_name} bytes失败，区块链可能已脱机")
+            input()
+
+        optimizer = optim.SGD(model.parameters(), lr=cfg["learning_rate"], momentum=cfg["momentum"])
+        acc = evaluate(model, test_loader, device)
+        print(f"[{task_name}] 替换后重新评估准确率：{acc:.2f}%")
+
+    # ====== 记录状态 ======
     mid_data["global_acc"][task_name].append(acc)
     mid_data["client_loss"][task_name].append(loss)
     mid_data["now_epochs"] = f"round_{epoch}"
@@ -182,7 +212,7 @@ def run_one_round(task_name, epoch, model, train_loader, test_loader, optimizer,
     phase = "投毒阶段" if in_poison_phase else "正常训练"
     print(f"[{task_name}] Epoch {epoch}/{total_epochs} | {phase} | Loss={loss:.4f} | Acc={acc:.2f}%")
 
-    # 生成推理样本结果
+    # ====== 推理样本生成 ======
     model.eval()
     with torch.no_grad():
         indices = torch.randint(0, len(test_dataset), (infer_image_nums,))
