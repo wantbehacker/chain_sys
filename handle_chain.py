@@ -145,6 +145,48 @@ class ChainClient:
         params = {"filename": filename}
         return self._safe_json(requests.delete(url, params=params))
 
+    def clear_all_models(self, confirm: bool = True):
+        """
+        一键清空链上所有模型信息和模型文件
+
+        :param confirm: 是否需要交互确认（True 时会提示确认，False 时直接清空）
+        :return: {"deleted_keys": [...], "deleted_files": [...]} 或 错误信息
+        """
+        deleted_keys, deleted_files = [], []
+
+        if confirm:
+            ans = input("⚠️ 确认要删除所有模型信息和模型文件吗？(yes/[no]): ").strip().lower()
+            if ans != "yes":
+                print("操作已取消。")
+                return {"message": "用户取消操作"}
+
+        # 删除所有模型信息
+        try:
+            all_data = self.get_all()
+            if isinstance(all_data, list):
+                for item in all_data:
+                    key = item.get("key")
+                    if key:
+                        self.delete_key(key)
+                        deleted_keys.append(key)
+        except Exception as e:
+            print(f"[清空模型信息失败] {e}")
+
+        # 删除所有文件
+        try:
+            file_list = self.list_files()
+            if isinstance(file_list, list):
+                for f in file_list:
+                    filename = f.get("name") or f.get("filename") or f
+                    if filename:
+                        self.delete_file(filename)
+                        deleted_files.append(filename)
+        except Exception as e:
+            print(f"[清空模型文件失败] {e}")
+
+        print(f"✅ 已删除 {len(deleted_keys)} 个模型信息，{len(deleted_files)} 个文件。")
+        return {"deleted_keys": deleted_keys, "deleted_files": deleted_files}
+
     # ===================== 工具函数 =====================
 
     @staticmethod
@@ -163,17 +205,19 @@ class ChainClient:
 # ===================== 测试 =====================
 if __name__ == "__main__":
     client = ChainClient("http://172.31.137.160:9000")
-    model_path = r"./save_model/emnist-cnn.pth"
+    model_path = r"./save_model/mnist-mlp.pth"
     model_hax = calc_hash(model_path)
     model_name = os.path.basename(model_path)
     model_info = {"acc": 90, "hash": model_hax, "skill": "image_classification"}
     print("上传模型信息:", client.set_key(model_name, model_info))
     print("上传模型", client.upload_file(model_path))
-    # print("获取所有模型信息:", client.get_all())
+    print("获取所有模型信息:", client.get_all())
     # print("列出文件:", client.list_files())
     # print("获取模型信息:", client.get_key(model_name))
     # print("下载模型", client.download_file(model_name, r"./chain_model/download_model.pth"))
+    # print("下载模型bytes", client.get_temp_model(model_name))
     # print("删除模型信息:", client.delete_key(model_name))
+    # print("清空模型信息和模型文件:", client.clear_all_models(False))
 
 # =====================================================================
 # # 文件操作示例

@@ -6,7 +6,7 @@
   "total_epochs": 10,
   "learning_rate": 0.01,
   "momentum": 0.9,
-  "model_name": "mnist-cnn",
+  "model_name": "mnist-mlp",
   "save_model": 0,
   "poison_round": 2,
   "poison_duration": 2

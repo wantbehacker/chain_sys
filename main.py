@@ -134,11 +134,12 @@ def init_task(task_name, cfg, num_classes, device):
     learning_rate = cfg["learning_rate"]
     momentum = cfg["momentum"]
     chain_model_name = f"{model_name}.pth"
+    # print(chain_model_name)
     # 构建模型
     model = build_model(model_name, num_classes).to(device)
 
     # ==== 优先从链上加载模型 ====
-    print(f"[{task_name}] 尝试从链上加载初始模型...")
+    print(f"[{task_name}] 尝试从链上加载初始模型{chain_model_name}...")
     model_bytes, valid, model_hash, model_acc, model_skill = get_model_bytes(chain_model_name)
 
     if model_bytes:
@@ -146,9 +147,9 @@ def init_task(task_name, cfg, num_classes, device):
             buffer = io.BytesIO(model_bytes)
             state_dict = torch.load(buffer, map_location=device)
             model.load_state_dict(state_dict)
-            print(f"[{task_name}] 已从链上加载模型 ✅ (hash={model_hash}, acc={model_acc}%)")
-        except Exception:
-            print(f"构建链上模型{chain_model_name}失败，bytes已拉取成功")
+            print(f"[{task_name}] 已从链上加载模型 (hash={model_hash}, acc={model_acc}%)")
+        except Exception as e:
+            print(f"bytes已拉取成功,构建链上模型{chain_model_name}失败\n错误为{e}")
             input()
     else:
         print(f"拉取模型{chain_model_name} bytes失败，区块链可能已脱机")
@@ -184,7 +185,7 @@ def run_one_round(task_name, epoch, model, train_loader, test_loader, optimizer,
 
     # ====== 投毒阶段结束后：替换为链上原始模型 ======
     if epoch == poison_round + poison_duration and task_name == "replace":
-        print(f"[{task_name}] 投毒阶段结束，尝试从链上恢复原始模型...")
+        print(f"[{task_name}] 投毒阶段结束，尝试从链上下载模型{chain_model_name}...")
         model_bytes, valid, model_hash, model_acc, model_skill = get_model_bytes(f"{model_name}.pth")
 
         if model_bytes:
@@ -193,8 +194,8 @@ def run_one_round(task_name, epoch, model, train_loader, test_loader, optimizer,
                 state_dict = torch.load(buffer, map_location=device)
                 model.load_state_dict(state_dict)
                 print(f"[{task_name}] 成功从链上恢复模型 ✅ (hash={model_hash}, acc={model_acc}%)")
-            except Exception:
-                print(f"构建链上模型{chain_model_name}失败，bytes已拉取成功")
+            except Exception as e:
+                print(f"bytes已拉取成功,构建链上模型{chain_model_name}失败\n错误为{e}")
                 input()
         else:
             print(f"拉取模型{chain_model_name} bytes失败，区块链可能已脱机")
@@ -245,7 +246,7 @@ def run_one_round(task_name, epoch, model, train_loader, test_loader, optimizer,
     return model, optimizer
 
 
-def get_model_bytes(model_name: str = "emnist-cnn.pth"):
+def get_model_bytes(model_name: str):
     client = ChainClient("http://172.31.137.160:9000")
     chain_model_name = model_name
 
