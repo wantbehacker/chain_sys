@@ -1,4 +1,5 @@
 {
+  "chain_ip": "http://172.31.137.160:9000",
   "data_root": "./data_set",
   "image_size": 28,
   "batch_size": 64,
@@ -8,5 +9,6 @@
   "momentum": 0.9,
   "model_name": "emnist-cnn",
   "poison_round": 2,
-  "poison_duration": 2
+  "poison_duration": 2,
+  "deepseek_api": ""
 }

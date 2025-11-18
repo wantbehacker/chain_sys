@@ -22,7 +22,7 @@ def download_cifar10(data_root=r"./data_set"):
     ])
 
     # 下载训练集
-    train_dataset = datasets.CIFAR10(
+    train_dataset = datasets.CIFAR100(
         root=data_root,
         train=True,
         download=True,
@@ -31,7 +31,7 @@ def download_cifar10(data_root=r"./data_set"):
     print(f"训练集下载完成，样本数量: {len(train_dataset)}")
 
     # 下载测试集
-    test_dataset = datasets.CIFAR10(
+    test_dataset = datasets.CIFAR100(
         root=data_root,
         train=False,
         download=True,
