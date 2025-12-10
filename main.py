@@ -10,6 +10,7 @@ import copy
 import hashlib
 import io
 import json
+import os
 import time
 from pathlib import Path
 
@@ -86,6 +87,33 @@ def get_dataloaders(image_size, ds_name, data_root, batch_size, num_workers=0):
         train_dataset = datasets.EMNIST(data_root, split="byclass", train=True, download=True, transform=transform)
         test_dataset = datasets.EMNIST(data_root, split="byclass", train=False, download=True, transform=transform)
         class_nums = 62
+    elif ds_name == "vehicle":
+        from models.vehicle.DataLoader.loader import VehicleDataset
+        image_dir = os.path.join(data_root, r"Military and Civilian Vehicles Classification\Images")
+        train_csv = os.path.join(data_root,
+                                 r"Military and Civilian Vehicles Classification\Labels\CSV Format\train_labels.csv")
+        test_csv = os.path.join(data_root,
+                                r"Military and Civilian Vehicles Classification\Labels\CSV Format\test_labels.csv")
+        # =================== 数据增强与归一化 ===================
+        transform_train = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(15),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+        ])
+
+        transform_test = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+        ])
+        train_dataset = VehicleDataset(train_csv, image_dir, transform=transform_train, sample_ratio=0.2)
+        test_dataset = VehicleDataset(test_csv, image_dir, transform=transform_test)
+        class_nums = 6
     else:
         train_dataset = datasets.ImageFolder(data_root / "train", transform=transform)
         test_dataset = datasets.ImageFolder(data_root / "val", transform=transform)
@@ -217,30 +245,82 @@ def run_one_round(task_name, epoch, model, train_loader, test_loader, optimizer,
     model.eval()
     with torch.no_grad():
         indices = torch.randint(0, len(test_dataset), (infer_image_nums,))
-        sample_imgs = torch.stack([test_dataset[i][0] for i in indices])
-        sample_labels = torch.tensor([test_dataset[i][1] for i in indices])
-        preds = model(sample_imgs.to(device)).argmax(1).cpu()
+        img_results = []
 
-    img_results = []
-    for i in range(infer_image_nums):
-        img = sample_imgs[i].numpy()
-        if img.shape[0] == 1:
-            img = img.squeeze(0)
-            img = ((img * 0.5 + 0.5) * 255).astype(np.uint8)
-            img = Image.fromarray(img, mode='L')
+        # 判断是否是 Vehicle 数据集
+        if "vehicle" in model_name.lower():
+            # 走原始图像流程
+            sample_imgs = []
+            input_tensors = []
+            sample_labels = []
+
+            for i in indices:
+                # VehicleDataset 特有属性
+                filename, label = test_dataset.data[i]
+                img_path = os.path.join(test_dataset.img_dir, filename)
+                img = Image.open(img_path).convert("RGB")
+                sample_imgs.append(img)
+                sample_labels.append(label)
+
+                # 转为模型输入 tensor
+                transform_test = transforms.Compose([
+                    transforms.Resize((224, 224)),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+                ])
+                input_tensor = transform_test(img).unsqueeze(0).to(device)
+                input_tensors.append(input_tensor)
+
+            input_batch = torch.cat(input_tensors, dim=0)
+            preds = model(input_batch).argmax(1).cpu()
+
+            id2class = {
+                0: "military tank",
+                1: "military aircraft",
+                2: "military helicopter",
+                3: "military truck",
+                4: "civilian car",
+                5: "civilian aircraft"
+            }
+
+            # 生成 img_base64
+            for i in range(infer_image_nums):
+                img = sample_imgs[i]  # 原始图像
+                buffer = io.BytesIO()
+                img.save(buffer, format="PNG")
+                img_base64 = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+                img_results.append({
+                    "img": img_base64,
+                    "label": id2class[int(sample_labels[i])],
+                    "pred": id2class[int(preds[i].item())]
+                })
+
         else:
-            img = img.transpose(1, 2, 0)
-            img = ((img * 0.5 + 0.5) * 255).astype(np.uint8)
-            img = Image.fromarray(img)
+            # 普通流程，使用 transform 后的 tensor
+            sample_imgs = torch.stack([test_dataset[i][0] for i in indices])
+            sample_labels = torch.tensor([test_dataset[i][1] for i in indices])
+            preds = model(sample_imgs.to(device)).argmax(1).cpu()
 
-        buffer = io.BytesIO()
-        img.save(buffer, format="PNG")
-        img_base64 = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
-        img_results.append({
-            "img": img_base64,
-            "label": int(sample_labels[i].item()),
-            "pred": int(preds[i].item())
-        })
+            for i in range(infer_image_nums):
+                img = sample_imgs[i].numpy()
+                if img.shape[0] == 1:
+                    img = img.squeeze(0)
+                    img = ((img * 0.5 + 0.5) * 255).astype(np.uint8)
+                    img = Image.fromarray(img, mode='L')
+                else:
+                    img = img.transpose(1, 2, 0)
+                    img = ((img * 0.5 + 0.5) * 255).astype(np.uint8)
+                    img = Image.fromarray(img)
+
+                buffer = io.BytesIO()
+                img.save(buffer, format="PNG")
+                img_base64 = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+                img_results.append({
+                    "img": img_base64,
+                    "label": int(sample_labels[i].item()),
+                    "pred": int(preds[i].item())
+                })
 
     mid_data["infer_results"][task_name][f"round_{epoch}"] = img_results
     return model, optimizer

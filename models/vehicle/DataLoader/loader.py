@@ -35,8 +35,8 @@ class VehicleDataset(torch.utils.data.Dataset):
                         self.data.append((filename, label))
                         seen_files.add(filename)
 
-        if sample_ratio < 1.0:
-            random.seed(42)
+        if sample_ratio < 1.0: # 图片抽样
+            # random.seed(42) # 如果固定随机种子每次抽样是一模一样
             self.data = random.sample(self.data, max(1, int(len(self.data) * sample_ratio)))
 
     def __len__(self):
