@@ -15,10 +15,16 @@ def calc_hash(filepath, algo="sha256", chunk_size=8192):
     return h.hexdigest()
 
 
+def url_hash(url):
+    h = hashlib.new("sha256")
+    h.update(url.encode("utf-8"))  # 关键点
+    return h.hexdigest()
+
+
 if __name__ == "__main__":
-    file_path = r"D:\PythonProject\AI\联邦学习+手写字体识别\chain_model\download_model.pth"
-
-    for algo in ["md5", "sha1", "sha256", "sha512"]:
-        print(f"{algo.upper()}: {calc_hash(file_path, algo)}")
-
+    # file_path = r"save_model/silero/silero_stt_en_v6.jit"
+    #
+    # for algo in ["sha256"]:
+    #     print(f"{calc_hash(file_path, algo)}")
+    print(url_hash("http://172.31.137.160:9000//files/download/8"))
 # 4eb739313b04724b798c0554637369bc36a9ff0292d5fce0d37d73187ee3f702

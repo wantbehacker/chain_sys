@@ -1,0 +1,96 @@
+{
+  "tag_index": {
+    "image_classification": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "Speech Recognition": [
+      7
+    ],
+    "ocr": [
+      8
+    ],
+    "NLP": [
+      9
+    ]
+  },
+  "example": {
+    "description": "基于 {模型架构} 的{大任务类}模型，训练于 {数据集}，用于 {任务类别}"
+  },
+  "1": {
+    "acc": "90-verified",
+    "hash": "4eb739313b04724b798c0554637369bc36a9ff0292d5fce0d37d73187ee3f702",
+    "skill": "image_classification",
+    "description": "基于CNN的图像分类模型,训练于Military and Civilian Vehicles Classification,用于军民载具识别。",
+    "model_path": "http://172.31.137.160:9000//files/download/1",
+    "CID": "27115cf493f4f9ee8495036cfa4cbc9605c3bbbde8c2c0aaa1ecfcc0b5183a5e"
+  },
+  "2": {
+    "acc": "90-verified",
+    "hash": "04a59fb0c879c16d2c9f2124b39829804d2542ccbb06937bf85df6b177b062b8",
+    "skill": "image_classification",
+    "description": "基于CNN的图像分类模型,训练于EMNIST,用于手写数字、字母识别。",
+    "model_path": "http://172.31.137.160:9000//files/download/2",
+    "CID": "b71fb87b5c7e53a6639abc513cb6481cf0ee9153188529b258deccc450a8f2be"
+  },
+  "3": {
+    "acc": "90-verified",
+    "hash": "5791405f1d6fbe734f0dcb652759d26f89ee8d8c88a4bca875cb8de32f3d4018",
+    "skill": "image_classification",
+    "description": "基于MLP的图像分类模型,训练于EMNIST,用于手写数字、字母识别。",
+    "model_path": "http://172.31.137.160:9000//files/download/3",
+    "CID": "bb33c89ca09fea7f409a92df0f0fa3981899dad786bc7350c764423b788b38e2"
+  },
+  "4": {
+    "acc": "90-verified",
+    "hash": "2d144fb042ce130fa81b171c338a34aede451365f541ed5f2ea8d9f883308505",
+    "skill": "image_classification",
+    "description": "基于CNN的图像分类模型,训练于MNIST,用于手写数字识别。",
+    "model_path": "http://172.31.137.160:9000//files/download/4",
+    "CID": "90f0cbd7d3f28b2a0d0347bcbd26d201b729e70ef2a2eda741f264ed0d45d932"
+  },
+  "5": {
+    "acc": "90-verified",
+    "hash": "c2751f5054b5612501d7636eddbf13854f0844dce808376ce9cf2051679904eb",
+    "skill": "image_classification",
+    "description": "基于LeNET的图像分类模型,训练于MNIST,用于手写数字识别。",
+    "model_path": "http://172.31.137.160:9000//files/download/5",
+    "CID": "cc58e33d7eeebd713d147772d74f112891a11e6598827347d68f844fd2ea16f5"
+  },
+  "6": {
+    "acc": "90-verified",
+    "hash": "21368c398439e1a0674db12154cb00d3c905c6b3d37d5b344c28708dedaa80b2",
+    "skill": "image_classification",
+    "description": "基于MLP的图像分类模型,训练于MNIST,用于手写数字识别。",
+    "model_path": "http://172.31.137.160:9000//files/download/6",
+    "CID": "f736ea6cc426b2311ec291dbb4a083bb9f12f68f7cde1b0f9c3c2d2d4c1c39ed"
+  },
+  "7": {
+    "acc": "90-verified",
+    "hash": "a1ea33a0cab1bd43a3f525cd9cf325840287d19c16c39ed3bb32a149f2686199",
+    "skill": "Speech Recognition",
+    "description": "基于silero-en-v6架构的英文语音识别模型，训练于Silero语料库，用于语音转文字。",
+    "model_path": "http://172.31.137.160:9000//files/download/7",
+    "CID": "102079eb8470ddf0690792c3031fd35ebad12a8fd07b2ce1f22211bb8e5ce174"
+  },
+   "8": {
+    "acc": "95-verified",
+    "hash": "d2f19b8a1c7fe1f2db3a9f99813c4aaae6743fb71beab6c045f7c2fb7d9012cf",
+    "skill": "ocr",
+    "description": "An OCR model based on the PP-OCRv4 architecture, trained on the SynthText dataset, is suitable for recognizing English text within screenshots and images.",
+    "model_path": "http://172.31.137.160:9000//files/download/8",
+    "CID": "be29974f0619866991e8f5525e40829c15fd154534f119be7e0463ce39527470"
+  },
+  "9": {
+    "acc": "90-verified",
+    "hash": "a1ea33a0cab1bd43a3f525cd9cf325840287d19c16c39ed3bb32a149f2686199",
+    "skill": "NLP",
+    "description": "基于 DistilBERT 的文本理解模型，训练于 Hugging Face 公开预训练语料，用于英文文本编码、特征提取及下游NLP任务",
+    "model_path": "http://172.31.137.160:9000//files/download/9",
+    "CID": "249174a4354c6fae743927a09afd02e2abdd1b5499806afdb3df825aabed014a"
+  }
+}
