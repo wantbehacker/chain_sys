@@ -4,14 +4,16 @@ warnings.filterwarnings("ignore", message=".*pin_memory.*")
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
+from ds_chat import verify_description
 from count_hax import url_hash, calc_hash
 from handle_chain import ChainClient
 from main import get_dataloaders, evaluate
 from models import build_model
 
 if __name__ == '__main__':
+    # 链接区块链
     client = ChainClient("http://172.31.137.160:9000")
+    # 用户提供模型与模型描述文件
     model_info = {
         "acc": "90",
         "skill": "image_classification",
@@ -26,6 +28,7 @@ if __name__ == '__main__':
     model_hash = calc_hash(model_path)
     model_info["cid"] = cid
     model_info["hash"] = model_hash
+    model_info.pop("model_path")
     #
     dataset = model_info["data_set"]
     frame = model_info["frame"]
@@ -71,5 +74,19 @@ if __name__ == '__main__':
         model_acc = False
 
     # 自述校验
-
+    if model_acc and verify_description(model_info):
+        model_info["description"] = f"{model_info['description']}-reliable"
+        print("模型自述校验通过")
+    else:
+        model_info["description"] = f"{model_info['description']}-unreliable"
+        print("模型自述校验不通过")
     print(model_info)
+
+    example = {'acc': '98.185-reliable',
+               'skill': 'image_classification',
+               'frame': 'cnn-reliable',
+               'data_set': 'vehicle-reliable',
+               'description': '基于CNN的图像分类模型,训练于Military and Civilian Vehicles Classification,用于军民载具识别。-reliable',
+               'cid': '27115cf493f4f9ee8495036cfa4cbc9605c3bbbde8c2c0aaa1ecfcc0b5183a5e',
+               'hash': '4eb739313b04724b798c0554637369bc36a9ff0292d5fce0d37d73187ee3f702'
+               }
