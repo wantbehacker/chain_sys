@@ -61,7 +61,7 @@ def load_config():
 
 
 # =================== 数据加载 ===================
-def get_dataloaders(image_size, ds_name, data_root, batch_size, num_workers=0):
+def get_dataloaders(image_size, ds_name, data_root = r"./data_set", batch_size = 64, num_workers=0):
     data_root = Path(data_root)
 
     transform = transforms.Compose([
@@ -115,9 +115,7 @@ def get_dataloaders(image_size, ds_name, data_root, batch_size, num_workers=0):
         test_dataset = VehicleDataset(test_csv, image_dir, transform=transform_test)
         class_nums = 6
     else:
-        train_dataset = datasets.ImageFolder(data_root / "train", transform=transform)
-        test_dataset = datasets.ImageFolder(data_root / "val", transform=transform)
-        class_nums = len(train_dataset.classes)
+        return False,False,False
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
                               num_workers=num_workers, pin_memory=True)

@@ -13,7 +13,7 @@ import importlib
 import torch.nn as nn
 
 
-def build_model(model_name: str, num_classes: int) -> nn.Module:
+def build_model(model_name: str, num_classes: int):
     """
     根据名称构建模型。
     支持格式：
@@ -38,8 +38,10 @@ def build_model(model_name: str, num_classes: int) -> nn.Module:
                 None
             )
             if model_class is None:
-                raise ImportError(f"未在 {module_path} 中找到 nn.Module 子类")
+                print(f"未在 {module_path} 中找到 nn.Module 子类")
+                return None
             print(f"从 {module_path} 导入模型: {model_class.__name__}")
             return model_class(num_classes=num_classes)
         except Exception as e:
-            raise ImportError(f"无法加载模型 {model_name}: {e}")
+            print(f"无法加载模型 {model_name}: {e}")
+            return None

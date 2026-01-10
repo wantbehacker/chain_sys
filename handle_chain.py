@@ -61,7 +61,11 @@ class ChainClient:
                         item["value"] = json.loads(item["value"])
                     except Exception:
                         pass
-        return res
+        if len(res) > 0:
+            res_dic = {item['key']: item['value'] for item in res}
+        else:
+            res_dic = {}
+        return res_dic
 
     def delete_key(self, key: str):
         """
@@ -163,12 +167,9 @@ class ChainClient:
         # 删除所有模型信息
         try:
             all_data = self.get_all()
-            if isinstance(all_data, list):
-                for item in all_data:
-                    key = item.get("key")
-                    if key:
-                        self.delete_key(key)
-                        deleted_keys.append(key)
+            for key in all_data:
+                self.delete_key(key)
+                deleted_keys.append(key)
         except Exception as e:
             print(f"[清空模型信息失败] {e}")
 
@@ -208,9 +209,9 @@ if __name__ == "__main__":
     model_path = r"./save_model/vehicle-cnn.pth"
     model_hax = calc_hash(model_path)
     model_name = os.path.basename(model_path)
-    model_info = {"acc": 90, "hash": model_hax, "skill": "image_classification"}
-    print("上传模型信息:", client.set_key(model_name, model_info))
-    print("上传模型", client.upload_file(model_path))
+    model_info = {"acc": 91, "hash": model_hax, "skill": "image_classification"}
+    # print("上传模型信息:", client.set_key(model_name, model_info))
+    # print("上传模型", client.upload_file(model_path))
     # print("获取所有模型信息:", client.get_all())
     # print("列出文件:", client.list_files())
     # print("获取模型信息:", client.get_key(model_name))

@@ -1,4 +1,6 @@
 from handle_chain import ChainClient
+from openai import OpenAI
+import json
 
 if __name__ == '__main__':
     task = "我现在要识别常见载具"
