@@ -19,12 +19,12 @@ if __name__ == '__main__':
         "skill": "image_classification",
         "frame": "cnn",
         "data_set": "vehicle",
-        "description": "基于CNN的图像分类模型,训练于Military and Civilian Vehicles Classification,用于军民载具识别。",
-        "model_path": "http://172.31.137.160:9000//files/download/1",
+        "description": "基于CNN的图像分类模型,训练于Military and Civilian Vehicles Classification,用于军民载具识别。"
     }
     model_path = r"./save_model/vehicle-cnn.pth"
+    cid_path = "http://172.31.137.160:9000//files/download/1"
     # 计算模型hash与cid的hash
-    cid = url_hash(model_info["model_path"])
+    cid = url_hash(cid_path)
     model_hash = calc_hash(model_path)
     model_info["cid"] = cid
     model_info["hash"] = model_hash
